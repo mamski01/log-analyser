@@ -13,27 +13,27 @@ import os
 #       1: meaning of the message
 #
 
-# Main variables
-DatabaseDict = {}
-AnalysedDict = {}
-HumanDict = {}
-logFile = 'small.log'
-logDictDatabase = 'log_dict.json'
-logDictAnalysed = 'log_anal.json'
-logHuman = 'log_final.json'
+
+DATABASE_DICT, ANALYSED_DICT, HUMAN_DICT = {}, {}, {}
+
+# Relevant paths
+LOG_PATH = 'small.log'
+DATABASE_DICT_PATH = 'log_dict.json'
+ANALYSED_LOG_PATH = 'log_anal.json'
+HUMAN_LOG = 'log_final.json'
 
 # Timestamp format before log message
 timestampFormat = '(\d{2})/(\d{2})/(\d{2})\s(\d{2}):(\d{2}):(\d{2})'
 logAdditions = '(\s\s0\s*)'
 
-def dictDatabaseBuild(DatabaseDict):
+def dictDatabaseBuild(DATABASE_DICT):
     # Open log file in read only mode
-    _file = open(logFile, 'r')
+    _file = open(LOG_PATH, 'r')
 
-    if os.stat(logDictDatabase).st_size != 0:
-        with open(logDictDatabase) as f:
-            DatabaseDict = json.load(f)
-        os.replace(logDictDatabase, 'Old_' + logDictDatabase)
+    if os.stat(DATABASE_DICT_PATH).st_size != 0:
+        with open(DATABASE_DICT_PATH) as f:
+            DATABASE_DICT = json.load(f)
+        os.replace(DATABASE_DICT_PATH, 'Old_' + DATABASE_DICT_PATH)
 
     for line in _file:
         cleanLine = re.sub(timestampFormat, '', line).replace('\n','')
@@ -42,18 +42,18 @@ def dictDatabaseBuild(DatabaseDict):
         # Hash the message, this will be used as key value in the dictionary
         entryHash = str(int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
         # Search for hashed message in the dictionary
-        if entryHash not in DatabaseDict:
-            DatabaseDict[entryHash] = (cleanLine, 'new')
+        if entryHash not in DATABASE_DICT:
+            DATABASE_DICT[entryHash] = (cleanLine, 'new')
         
     _file.close()
 
-    with open(logDictDatabase, 'w') as f:
-        json.dump(DatabaseDict, f)
+    with open(DATABASE_DICT_PATH, 'w') as f:
+        json.dump(DATABASE_DICT, f)
 
 
-def dictAnalysedBuild(AnalysedDict):
+def dictAnalysedBuild(ANALYSED_DICT):
     # Open log file in read only mode
-    _file = open(logFile, 'r')
+    _file = open(LOG_PATH, 'r')
     # Declare total log line counter
     line_count = 0
 
@@ -71,30 +71,30 @@ def dictAnalysedBuild(AnalysedDict):
         # Hash the message, this will be used as key value in the dictionary
         entryHash = str(int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
         # Search for hashed message in the dictionary
-        if entryHash in AnalysedDict:
+        if entryHash in ANALYSED_DICT:
             # If message is found get it temporarily
-            entryFound = AnalysedDict[entryHash]
+            entryFound = ANALYSED_DICT[entryHash]
             # Increment the message counter 
             countIncrement = entryFound[1] + 1
             # Create new tuple with the updated counter
             updatedEntry = (entryFound[0], countIncrement)
             # Overwrite value with updated tuple
-            AnalysedDict[entryHash] = updatedEntry
+            ANALYSED_DICT[entryHash] = updatedEntry
         else:
             # Add new tuple to the dictionary if not present
-            AnalysedDict[entryHash] = (cleanLine, 1)
+            ANALYSED_DICT[entryHash] = (cleanLine, 1)
         
     _file.close()
-    with open(logDictAnalysed, 'w') as f:
-        json.dump(AnalysedDict, f)
+    with open(ANALYSED_LOG_PATH, 'w') as f:
+        json.dump(ANALYSED_DICT, f)
 
-def dictHumanBuild(DatabaseDict, HumanDict):
+def dictHumanBuild(DATABASE_DICT, HUMAN_DICT):
      # Open log file in read only mode
-    _file = open(logFile, 'r')
+    _file = open(LOG_PATH, 'r')
 
-    if os.stat(logDictDatabase).st_size != 0:
-        with open(logDictDatabase) as f:
-            DatabaseDict = json.load(f)
+    if os.stat(DATABASE_DICT_PATH).st_size != 0:
+        with open(DATABASE_DICT_PATH) as f:
+            DATABASE_DICT = json.load(f)
     counter = 0    
     for line in _file:
         cleanLine = re.sub(timestampFormat, '', line).replace('\n','')
@@ -103,22 +103,22 @@ def dictHumanBuild(DatabaseDict, HumanDict):
         # Hash the message, this will be used as key value in the dictionary
         entryHash = str(int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
         # Search for hashed message in the dictionary
-        if entryHash in DatabaseDict:
+        if entryHash in DATABASE_DICT:
             # FIX THIS!!!
-            if DatabaseDict[entryHash][1] is 'new':
-                HumanDict[str(counter)] = DatabaseDict[entryHash][1]
+            if DATABASE_DICT[entryHash][1] is 'new':
+                HUMAN_DICT[str(counter)] = DATABASE_DICT[entryHash][1]
                 counter += 1
 
         
     _file.close()
 
-    with open(logHuman, 'w') as f:
-        json.dump(HumanDict, f)
+    with open(HUMAN_LOG, 'w') as f:
+        json.dump(HUMAN_DICT, f)
 
 
-dictDatabaseBuild(DatabaseDict)
-dictAnalysedBuild(AnalysedDict)
-dictHumanBuild(DatabaseDict, HumanDict)
+dictDatabaseBuild(DATABASE_DICT)
+dictAnalysedBuild(ANALYSED_DICT)
+dictHumanBuild(DATABASE_DICT, HUMAN_DICT)
 
-    # with open(logDictDatabase) as f:
+    # with open(DATABASE_DICT_PATH) as f:
     #     my_dict = json.load(f)
