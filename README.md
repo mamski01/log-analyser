@@ -24,3 +24,29 @@ This small application is meant to analyse the main errors log (*at least for no
 1. Run through the same process as for the dictionary to clean the data
 2. Compare it to the dictionary hash table
 3. Replace the entries with the definition inside the dictionary
+
+### Dictionary model
+
+```json
+{
+    "message hash":[
+        "original message",
+        "interpreted message",
+        "error group"
+    ]
+}
+```
+### Middle model
+
+```json
+{
+    "message hash":[
+        "timestamp",
+        "
+    ]
+}
+```
+
+### Notes for self
+
+1. Change the dictionary to include verbose keys for better reading

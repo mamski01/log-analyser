@@ -119,25 +119,30 @@ class LogAnalyser():
             with open(DATABASE_DICT_PATH) as f:
                 DATABASE_DICT = json.load(f)
 
-        counter = 0
-        for line in _file:
-            cleanLine = re.sub(TIMESTAMP_LOG_OG, '', line).replace('\n', '')
-            cleanLine = re.sub(LOG_CLUTTER, '', cleanLine)
-
-            # Hash the message, this will be used as key value in the dictionary
-            entryHash = str(
-                int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
-            # Search for hashed message in the dictionary
-            if entryHash in DATABASE_DICT:
-                # FIX THIS!!!
-                if DATABASE_DICT[entryHash][1] == 'new':
-                    HUMAN_DICT[str(counter)] = DATABASE_DICT[entryHash][1]
-                    counter += 1
-
-        _file.close()
-
         with open(HUMAN_LOG, 'w') as f:
-            json.dump(HUMAN_DICT, f)
+            counter = 0
+            for line in _file:
+                if re.search(TIMESTAMP_LOG_OG, line):
+                    timestamp = re.search(TIMESTAMP_LOG_OG, line)
+                    print(timestamp.group(0))
+                
+                cleanLine = re.sub(TIMESTAMP_LOG_OG, '', line).replace('\n', '')
+                cleanLine = re.sub(LOG_CLUTTER, '', cleanLine)
+
+                # Hash the message, this will be used as key value in the dictionary
+                entryHash = str(
+                    int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
+                # Search for hashed message in the dictionary
+                if entryHash in DATABASE_DICT:
+                    # FIX THIS!!!
+                    if DATABASE_DICT[entryHash][1] == 'new':
+                        HUMAN_DICT[str(counter)] = DATABASE_DICT[entryHash][1]
+                        counter += 1
+
+            _file.close()
+
+        # with open(HUMAN_LOG, 'w') as f:
+        #     json.dump(HUMAN_DICT, f)
 
 
 LogAnalyser().build_database_dict(LOG_PATH)
