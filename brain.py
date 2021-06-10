@@ -13,31 +13,38 @@ import os
 #       1: meaning of the message
 #
 
-
 DATABASE_DICT, ANALYSED_DICT, HUMAN_DICT = {}, {}, {}
 
+# File names
+LOG_N = 'small.log'
+DATABASE_DICT_N = 'log_dict.json'
+ANALYSED_LOG_N  = 'analysed.json'
+HUMAN_LOG_N = 'human.json'
 # Relevant paths
-LOG_PATH = 'small.log'
-DATABASE_DICT_PATH = 'log_dict.json'
-ANALYSED_LOG_PATH = 'log_anal.json'
-HUMAN_LOG = 'log_final.json'
+LOG_FOLDER = 'logs/'
+LOG_PATH = LOG_FOLDER + LOG_N
+DATABASE_DICT_PATH = LOG_FOLDER + DATABASE_DICT_N
+ANALYSED_LOG_PATH = LOG_FOLDER + ANALYSED_LOG_N
+HUMAN_LOG = LOG_FOLDER + HUMAN_LOG_N
 
-# Timestamp format before log message
-timestampFormat = '(\d{2})/(\d{2})/(\d{2})\s(\d{2}):(\d{2}):(\d{2})'
-logAdditions = '(\s\s0\s*)'
+print(LOG_PATH)
 
-def dictDatabaseBuild(DATABASE_DICT):
+# Timestamp format of base log
+TIMESTAMP_LOG_OG = '(\d{2})/(\d{2})/(\d{2})\s(\d{2}):(\d{2}):(\d{2})'
+LOG_CLUTTER = '(\s\s0\s*)'
+
+def build_database_dict(DATABASE_DICT):
     # Open log file in read only mode
     _file = open(LOG_PATH, 'r')
 
     if os.stat(DATABASE_DICT_PATH).st_size != 0:
         with open(DATABASE_DICT_PATH) as f:
             DATABASE_DICT = json.load(f)
-        os.replace(DATABASE_DICT_PATH, 'Old_' + DATABASE_DICT_PATH)
+        os.replace(DATABASE_DICT_PATH, LOG_FOLDER + 'old_' + DATABASE_DICT_N)
 
     for line in _file:
-        cleanLine = re.sub(timestampFormat, '', line).replace('\n','')
-        cleanLine = re.sub(logAdditions, '', cleanLine)
+        cleanLine = re.sub(TIMESTAMP_LOG_OG, '', line).replace('\n','')
+        cleanLine = re.sub(LOG_CLUTTER, '', cleanLine)
 
         # Hash the message, this will be used as key value in the dictionary
         entryHash = str(int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
@@ -51,7 +58,7 @@ def dictDatabaseBuild(DATABASE_DICT):
         json.dump(DATABASE_DICT, f)
 
 
-def dictAnalysedBuild(ANALYSED_DICT):
+def analyse_log(ANALYSED_DICT):
     # Open log file in read only mode
     _file = open(LOG_PATH, 'r')
     # Declare total log line counter
@@ -62,12 +69,12 @@ def dictAnalysedBuild(ANALYSED_DICT):
         if line != '\n':
             line_count += 1
         
-        # timeStamp = re.search(timestampFormat, line)
+        # timeStamp = re.search(TIMESTAMP_LOG_OG, line)
         # if timeStamp:
         #     print(timeStamp.group())
 
-        cleanLine = re.sub(timestampFormat, '', line).replace('\n','')
-        cleanLine = re.sub(logAdditions, '', cleanLine)
+        cleanLine = re.sub(TIMESTAMP_LOG_OG, '', line).replace('\n','')
+        cleanLine = re.sub(LOG_CLUTTER, '', cleanLine)
         # Hash the message, this will be used as key value in the dictionary
         entryHash = str(int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
         # Search for hashed message in the dictionary
@@ -88,7 +95,7 @@ def dictAnalysedBuild(ANALYSED_DICT):
     with open(ANALYSED_LOG_PATH, 'w') as f:
         json.dump(ANALYSED_DICT, f)
 
-def dictHumanBuild(DATABASE_DICT, HUMAN_DICT):
+def build_human_log(DATABASE_DICT, HUMAN_DICT):
      # Open log file in read only mode
     _file = open(LOG_PATH, 'r')
 
@@ -97,15 +104,15 @@ def dictHumanBuild(DATABASE_DICT, HUMAN_DICT):
             DATABASE_DICT = json.load(f)
     counter = 0    
     for line in _file:
-        cleanLine = re.sub(timestampFormat, '', line).replace('\n','')
-        cleanLine = re.sub(logAdditions, '', cleanLine)
+        cleanLine = re.sub(TIMESTAMP_LOG_OG, '', line).replace('\n','')
+        cleanLine = re.sub(LOG_CLUTTER, '', cleanLine)
 
         # Hash the message, this will be used as key value in the dictionary
         entryHash = str(int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
         # Search for hashed message in the dictionary
         if entryHash in DATABASE_DICT:
             # FIX THIS!!!
-            if DATABASE_DICT[entryHash][1] is 'new':
+            if DATABASE_DICT[entryHash][1] == 'new':
                 HUMAN_DICT[str(counter)] = DATABASE_DICT[entryHash][1]
                 counter += 1
 
@@ -116,9 +123,9 @@ def dictHumanBuild(DATABASE_DICT, HUMAN_DICT):
         json.dump(HUMAN_DICT, f)
 
 
-dictDatabaseBuild(DATABASE_DICT)
-dictAnalysedBuild(ANALYSED_DICT)
-dictHumanBuild(DATABASE_DICT, HUMAN_DICT)
+build_database_dict(DATABASE_DICT)
+analyse_log(ANALYSED_DICT)
+build_human_log(DATABASE_DICT, HUMAN_DICT)
 
     # with open(DATABASE_DICT_PATH) as f:
     #     my_dict = json.load(f)
