@@ -27,7 +27,6 @@ DATABASE_DICT_PATH = LOG_FOLDER + DATABASE_DICT_N
 ANALYSED_LOG_PATH = LOG_FOLDER + ANALYSED_LOG_N
 HUMAN_LOG = LOG_FOLDER + HUMAN_LOG_N
 
-print(LOG_PATH)
 
 # Timestamp format of base log
 TIMESTAMP_LOG_OG = '(\d{2})/(\d{2})/(\d{2})\s(\d{2}):(\d{2}):(\d{2})'
@@ -37,10 +36,15 @@ def build_database_dict(DATABASE_DICT):
     # Open log file in read only mode
     _file = open(LOG_PATH, 'r')
 
+    # Check if dictionary exists
+    if not os.path.isfile(DATABASE_DICT_PATH):
+        open(DATABASE_DICT_PATH, 'w+')
+
     if os.stat(DATABASE_DICT_PATH).st_size != 0:
         with open(DATABASE_DICT_PATH) as f:
             DATABASE_DICT = json.load(f)
         os.replace(DATABASE_DICT_PATH, LOG_FOLDER + 'old_' + DATABASE_DICT_N)
+        
 
     for line in _file:
         cleanLine = re.sub(TIMESTAMP_LOG_OG, '', line).replace('\n','')
@@ -50,7 +54,7 @@ def build_database_dict(DATABASE_DICT):
         entryHash = str(int(hashlib.sha512(cleanLine.encode('utf-8')).hexdigest(), 16))
         # Search for hashed message in the dictionary
         if entryHash not in DATABASE_DICT:
-            DATABASE_DICT[entryHash] = (cleanLine, 'new')
+            DATABASE_DICT[entryHash] = (cleanLine, 'new', 'WARN')
         
     _file.close()
 
@@ -99,9 +103,11 @@ def build_human_log(DATABASE_DICT, HUMAN_DICT):
      # Open log file in read only mode
     _file = open(LOG_PATH, 'r')
 
+    # Load dictionary
     if os.stat(DATABASE_DICT_PATH).st_size != 0:
         with open(DATABASE_DICT_PATH) as f:
             DATABASE_DICT = json.load(f)
+
     counter = 0    
     for line in _file:
         cleanLine = re.sub(TIMESTAMP_LOG_OG, '', line).replace('\n','')
